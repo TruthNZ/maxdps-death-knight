@@ -335,6 +335,7 @@ function DeathKnight:Unholy()
 	--local runicMax = UnitPowerMax('player', EnumPowerType.RunicPower);
 	local runes, runeCd = DeathKnight:Runes(timeShift);
 
+	local targets = MaxDps:TargetsInRange(49998);
 
 	local scourgeStrike = talents[UH.ClawingShadows] and UH.ClawingShadows or UH.ScourgeStrike;
 	local deathAndDecay = talents[UH.Defile] and UH.Defile or UH.DeathAndDecay;
@@ -389,7 +390,7 @@ function DeathKnight:Unholy()
 		end
 		
 		-- If theres no wounds on the target, put at least one on
-		if runes >= 2 and not debuff[UH.FesteringWound] then
+		if runes >= 2 and debuff[UH.FesteringWound].count < 1 then
 			return UH.FesteringStrike;
 		end
 		
@@ -405,7 +406,7 @@ function DeathKnight:Unholy()
 		end
 		
 		-- Use Clawing Shadows/Scourge Strike if we have a wound up and aren't saving for Apocalypse
-		if runes >= 1 and debuff[UH.FesteringWound].count >= and not cooldown[UH.Apocalypse].ready then
+		if runes >= 1 and debuff[UH.FesteringWound].count >= 1 and not cooldown[UH.Apocalypse].ready then
 			return scourgeStrike;
 		end
 		
@@ -435,7 +436,7 @@ function DeathKnight:Unholy()
 		end
 		
 		-- Put a Wound up to benefit from Bursting Sores
-		if talents[UH.BurstingSores] and runes >= 2 and not debuff[UH.FesteringWound] then
+		if talents[UH.BurstingSores] and runes >= 2 and debuff[UH.FesteringWound].count < 1 then
 			return UH.FesteringStrike;
 		end
 		
@@ -445,12 +446,12 @@ function DeathKnight:Unholy()
 		end
 		
 		-- Scourge Strike/Clawing Shadows if we can burst a Wound
-		if runes >= 1 and debuff[UH.FesteringWound] then
+		if runes >= 1 and debuff[UH.FesteringWound].count >= 1 then
 			return scourgeStrike;
 		end
 		
 		-- Use Festering Strike only if there aren't any Wounds up
-		if runes >= 2 and not debuff[UH.FesteringWound] then
+		if runes >= 2 and debuff[UH.FesteringWound].count < 1 then
 			return UH.FesteringStrike;
 		end
 		
