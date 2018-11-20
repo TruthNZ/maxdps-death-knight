@@ -88,6 +88,7 @@ local UH = {
 	Epidemic           = 207317,
 	SummonGargoyle     = 49206,
 	RaiseDead          = 46584,
+	UnholyBlight       = 115989,
 }
 
 
@@ -340,44 +341,118 @@ function DeathKnight:Unholy()
 
 	MaxDps:GlowCooldown(UH.ArmyOfTheDead, cooldown[UH.ArmyOfTheDead].ready and runes >= 3);
 
-	if talents[UH.UnholyFrenzy] then
-		MaxDps:GlowCooldown(UH.UnholyFrenzy, cooldown[UH.UnholyFrenzy].ready);
-	end
-
 	if not UnitExists('pet') and cooldown[UH.RaiseDead].ready then
 		return UH.RaiseDead;
-	end
-
-	if debuff[UH.VirulentPlague].refreshable and runes >= 1 then
-		return UH.Outbreak;
-	end
-
-	if runes < 2 and cooldown[UH.SoulReaper].ready then
-		return UH.SoulReaper;
 	end
 
 	if cooldown[UH.DarkTransformation].ready then
 		return UH.DarkTransformation;
 	end
-
-	if cooldown[UH.Apocalypse].ready and debuff[UH.FesteringWound].count >= 6 then
-		return UH.Apocalypse;
+	
+	if talents[UH.UnholyFrenzy] and cooldown[UH.UnholyFrenzy].ready then
+		return UH.UnholyFrenzy;
 	end
 
-	if runic > 80 or buff[UH.SuddenDoom].up then
-		return UH.DeathCoil;
+	if debuff[UH.VirulentPlague].refreshable and runes >= 1 then
+		return UH.Outbreak;
 	end
+	
+	if targets < 3 then
+		-- Single Target and Cleave
+		if talents[UH.SummonGargoyle] and cooldown[UH.SummonGargoyle].ready and runic >= 80 then
+			return UH.SummonGargoyle;
+		end
+		
+		if cooldown[UH.Apocalypse].ready and debuff[UH.FesteringWound].count >= 4 then
+			return UH.Apocalypse;
+		end
+		
+		-- Use Death Coil as much as possible while the Gargoyle is up
+		if buff[UH.SummonGargoyle].up and (buff[UH.SuddenDoom].up or runic >= 40) then
+			return UH.DeathCoil;
+		end
+		
+		-- Use Death Coil to avoid capping Runic power
+		if runic > 80 then
+			return UH.DeathCoil;
+		end
+		
+		-- If cleaving, and not saving for Apocalypse, use Death And Decay (Or Defile if talented)
+		if runes >= 1 and targets >= 2 and cooldown[deathAndDecay].ready and not cooldown[UH.Apocalypse].ready then
+			return deathAndDecay;
+		end
+		
+		-- Build up Festering Wounds for Apocalypse
+		if runes >= 2 and cooldown[UH.Apocalypse].ready and debuff[UH.FesteringWound].count < 4 then
+			return UH.FesteringStrike;
+		end
+		
+		-- If theres no wounds on the target, put at least one on
+		if runes >= 2 and not debuff[UH.FesteringWound] then
+			return UH.FesteringStrike;
+		end
+		
+		-- Use Unholy Blight on Cooldown
+		-- Ideally we'd save this for an AoE Phase ... but can't tell if that's coming up in this mod.
+		if runes >= 1 and talents[UH.UnholyBlight] and cooldown[UH.UnholyBlight].ready then
+			return UH.UnholyBlight;
+		end
+		
+		-- Use Clawing Shadows/Scourge Strike if we have a wound up and aren't saving for Apocalypse
+		if runes >= 1 and debuff[UH.FesteringWound].count >= and not cooldown[UH.Apocalypse].ready then
+			return scourgeStrike;
+		end
+		
+		-- Use Death Coil if not saving for Gargoyle
+		if runic >= 40 and not (talents[UH.SummonGargoyle] and cooldown[UH.SummonGargoyle].ready) then
+			return UH.DeathCoil;
+		end
+		
+		-- Otherwise hold (Either saving up for a Apocalypse/Gargoyle, or out of resources)
 
-	if cooldown[deathAndDecay].ready and runes >= 1 then
-		return deathAndDecay;
-	end
-
-	if debuff[UH.FesteringWound].count >= 1 and runes >= 1 then
-		return scourgeStrike;
-	end
-
-	if debuff[UH.FesteringWound].count < 6 and runes >= 2 then
-		return UH.FesteringStrike;
+	else
+		-- Multi-Target
+		
+		-- Use Unholy Blight on Cooldown
+		if runes >= 1 and talents[UH.UnholyBlight] and cooldown[UH.UnholyBlight].ready then
+			return UH.UnholyBlight;
+		end
+		
+		-- Use Death And Decay on Cooldown
+		if runes >= 1 and cooldown[deathAndDecay].ready then
+			return deathAndDecay;
+		end
+		
+		-- Use Epidemic to avoid maxing Runic Power
+		if runic >= 80 and talents[UH.Epidemic] then
+			return UH.Epidemic;
+		end
+		
+		-- Put a Wound up to benefit from Bursting Sores
+		if runes >= 2 and talents[UH.BurstingSores] and not debuff[UH.FesteringWound] then
+			return UH.FesteringStrike;
+		end
+		
+		-- Scourge Strike/Clawing Shadows while Death and Decay is running
+		if runes >= 1 and buff[deathAndDecay].up then
+			return scourgeStrike;
+		end
+		
+		-- If a Wound is on the  target
+		if runes >= 1 and debuff[UH.FesteringWound] then
+			return scourgeStrike;
+		end
+		
+		-- Use Epidemic as main runic spender
+		if runic >= 30 then
+			return UH.Epidemic;
+		end
+		
+		if buff[UH.SuddenDoom].up then
+			return UH.DeathCoil;
+		end
+		
+		-- Should only hit here if out of resources
 	end
 
 	return nil;
