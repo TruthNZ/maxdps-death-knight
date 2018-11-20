@@ -410,8 +410,13 @@ function DeathKnight:Unholy()
 			return scourgeStrike;
 		end
 		
+		-- Use free Death Coils
+		if buff[UH.SuddenDoom].up then
+			return UH.DeathCoil;
+		end
+		
 		-- Use Death Coil if not saving for Gargoyle
-		if (talents[UH.SummonGargoyle] and cooldown[UH.SummonGargoyle].ready) and runic >= 40 then
+		if not (talents[UH.SummonGargoyle] and cooldown[UH.SummonGargoyle].ready) and runic >= 40 then
 			return UH.DeathCoil;
 		end
 		
@@ -460,7 +465,7 @@ function DeathKnight:Unholy()
 			return UH.Epidemic;
 		end
 		
-		-- Use Death Coil only if Sudden Doom is up
+		-- Use free Death Coils
 		if buff[UH.SuddenDoom].up then
 			return UH.DeathCoil;
 		end
