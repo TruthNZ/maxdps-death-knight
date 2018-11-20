@@ -358,7 +358,8 @@ function DeathKnight:Unholy()
 	end
 	
 	if targets < 3 then
-		-- Single Target and Cleave
+		-- Single Target or Cleave
+		
 		if talents[UH.SummonGargoyle] and cooldown[UH.SummonGargoyle].ready and runic >= 80 then
 			return UH.SummonGargoyle;
 		end
@@ -368,7 +369,7 @@ function DeathKnight:Unholy()
 		end
 		
 		-- Use Death Coil as much as possible while the Gargoyle is up
-		if buff[UH.SummonGargoyle].up and (buff[UH.SuddenDoom].up or runic >= 40) then
+		if talents[UH.SummonGargoyle] and buff[UH.SummonGargoyle].up and (buff[UH.SuddenDoom].up or runic >= 40) then
 			return UH.DeathCoil;
 		end
 		
@@ -377,7 +378,7 @@ function DeathKnight:Unholy()
 			return UH.DeathCoil;
 		end
 		
-		-- If cleaving, and not saving for Apocalypse, use Death And Decay (Or Defile if talented)
+		-- If cleaving, and not saving for Apocalypse, use Death And Decay/Defile
 		if runes >= 1 and targets >= 2 and cooldown[deathAndDecay].ready and not cooldown[UH.Apocalypse].ready then
 			return deathAndDecay;
 		end
@@ -394,8 +395,13 @@ function DeathKnight:Unholy()
 		
 		-- Use Unholy Blight on Cooldown
 		-- Ideally we'd save this for an AoE Phase ... but can't tell if that's coming up in this mod.
-		if runes >= 1 and talents[UH.UnholyBlight] and cooldown[UH.UnholyBlight].ready then
+		if talents[UH.UnholyBlight] and runes >= 1 and cooldown[UH.UnholyBlight].ready then
 			return UH.UnholyBlight;
+		end
+		
+		-- Use Soul Reaper if we can get full usage of the runes
+		if talents[UH.SoulReaper] and runes <= 4 and cooldown[UH.SoulReaper].ready then
+			return UH.SoulReaper;
 		end
 		
 		-- Use Clawing Shadows/Scourge Strike if we have a wound up and aren't saving for Apocalypse
@@ -404,17 +410,17 @@ function DeathKnight:Unholy()
 		end
 		
 		-- Use Death Coil if not saving for Gargoyle
-		if runic >= 40 and not (talents[UH.SummonGargoyle] and cooldown[UH.SummonGargoyle].ready) then
+		if (talents[UH.SummonGargoyle] and cooldown[UH.SummonGargoyle].ready) and runic >= 40 then
 			return UH.DeathCoil;
 		end
 		
-		-- Otherwise hold (Either saving up for a Apocalypse/Gargoyle, or out of resources)
+		-- Either saving up for a Apocalypse/Gargoyle, or out of resources
 
 	else
 		-- Multi-Target
 		
 		-- Use Unholy Blight on Cooldown
-		if runes >= 1 and talents[UH.UnholyBlight] and cooldown[UH.UnholyBlight].ready then
+		if talents[UH.UnholyBlight] and runes >= 1 and cooldown[UH.UnholyBlight].ready then
 			return UH.UnholyBlight;
 		end
 		
@@ -424,12 +430,12 @@ function DeathKnight:Unholy()
 		end
 		
 		-- Use Epidemic to avoid maxing Runic Power
-		if runic >= 80 and talents[UH.Epidemic] then
+		if talents[UH.Epidemic] and runic >= 80 then
 			return UH.Epidemic;
 		end
 		
 		-- Put a Wound up to benefit from Bursting Sores
-		if runes >= 2 and talents[UH.BurstingSores] and not debuff[UH.FesteringWound] then
+		if talents[UH.BurstingSores] and runes >= 2 and not debuff[UH.FesteringWound] then
 			return UH.FesteringStrike;
 		end
 		
@@ -438,9 +444,14 @@ function DeathKnight:Unholy()
 			return scourgeStrike;
 		end
 		
-		-- If a Wound is on the  target
+		-- Scourge Strike/Clawing Shadows if we can burst a Wound
 		if runes >= 1 and debuff[UH.FesteringWound] then
 			return scourgeStrike;
+		end
+		
+		-- Use Festering Strike only if there aren't any Wounds up
+		if runes >= 2 and not debuff[UH.FesteringWound] then
+			return UH.FesteringStrike;
 		end
 		
 		-- Use Epidemic as main runic spender
@@ -448,6 +459,7 @@ function DeathKnight:Unholy()
 			return UH.Epidemic;
 		end
 		
+		-- Use Death Coil only if Sudden Doom is up
 		if buff[UH.SuddenDoom].up then
 			return UH.DeathCoil;
 		end
